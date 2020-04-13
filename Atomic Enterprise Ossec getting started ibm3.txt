@@ -1,0 +1,21 @@
+This is a document meant to provide instructions for customers who purchase Atomicorp's Atomic Enterprise OSSEC from the IBM/Redhat marketplace to configure the Docker container hub and connect agents to it.
+
+Perquisites: An installation of the Docker utility, a purchased copy of the AEO image.
+
+1. run docker run -it <image name> -p 80:80/tcp -p 443:443/tcp -p 514:514/udp -p 1514:1514/udp -p 1515:1515/tcp 30001:30001/tcp /bin/bash or some equivalent. The important part here is to not forget the ports, otherwise services on your hub won't function as intended. 
+
+2. Once inside your container run bash /root/docker-enable-remoted.sh. This will add necessary lines to a config file. 
+
+3. Run /var/ossec/bin/ossec-control restart. This should start the ossec services on the container. You can view running ossec services by running ps ax | grep ossec.
+
+4. Next run /usr/sbin/httpd, wait a while, run /var/awp/bin/awpctl start, wait a while again, and run /var/awp/bin/awpwebctl start.
+
+At this point all of the needed services should be running. Now you need to connect an agent to your hub.
+
+5. Assuming you have a machine that you want to make into an agent already, on your agent run wget http://<ip of hub>/installers/ossec-installer.sh. This will download the installer from the hub.
+
+6. Next run bash ossec-installer.sh <ip of hub>. This will install the agent software and connect it to the hub. 
+
+At this point configuration should be complete. You may also access a gui for your hub by going to https://<ip of hub>:30001 in a web browser. 
+
+Note that with the docker run command, once you leave the container it will auto shut down. It still exists, it is just turned off. You can turn it back on using docker container start <container id or name>. You will likely need to repeat the configuration of your container after it is turned off. Before running /root/docker-enable-remoted.sh again though, check /var/ossec/etc/ossec.conf for entries with the remote tag. There should only be two entries for remote in that file, one for 1514 and one for 514. If those are already present, skip the docker-enable-remoted.sh file and go right to /var/ossec/bin/ossec-control restart.
